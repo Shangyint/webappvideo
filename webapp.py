@@ -2,9 +2,9 @@ from manim import *
 
 class Utils():
     @staticmethod
-    def textbox(text):
+    def textbox(text, buff=MED_LARGE_BUFF):
         textobj = Text(text)
-        square = Rectangle().surround(textobj)
+        square = SurroundingRectangle(textobj, color=WHITE, buff=buff)
         return VGroup(textobj, square)
 
     @staticmethod
@@ -18,7 +18,8 @@ class Introduction(Scene):
     def construct(self):
         strings = "What are web applications?"
         question = Text(strings)
-        question.set_color_by_t2c({"applications": YELLOW})
+        question.set_color_by_gradient(BLUE, GREEN)
+        #question.set_color_by_t2c({"applications": YELLOW})
         self.wait()
         self.play(
             LaggedStartMap(FadeIn, question)
@@ -103,11 +104,73 @@ class ClientServer(Scene):
         self.add(webui)
         self.play(Write(BraceText(webuiG, "Frontend", brace_direction=RIGHT)))
         self.play(Write(BraceText(gp, "Backend", brace_direction=RIGHT)))
-        self.wait()
+        self.wait(3)
+        self.play(LaggedStartMap(Uncreate, self.get_top_level_mobjects()))
+        self.wait(2)
         
 class BrowserExample(Scene):
     def construct(self):
-        pass
+        browser = Utils.svgToWhite("assets/browser.svg")
+        self.play(FadeIn(browser))
+        self.play(browser.animate.scale(3.8))
+        url = Tex("\\texttt{facebook.com}", font='inconsolata').align_to(browser, UP).shift(DOWN*0.7, RIGHT*0.8).scale(1.3)
+        self.play(Write(url))
+
+        browserurl = VGroup(browser, url)
+        self.play(browserurl.animate.scale(0.3).shift(LEFT*3.5))
+
+        dnsServer = Utils.svgToWhite("assets/server.svg")
+        dnsText = Utils.textbox("Domain Name\n      Server", buff=MED_SMALL_BUFF).scale(0.3).next_to(dnsServer, UP)
+        dns = VGroup(dnsServer, dnsText)
+        self.play(Create(dns))
+        self.play(dns.animate.shift(RIGHT*3.5))
+
+        browserToDnsArrow = Arrow(browser.get_edge_center(RIGHT), dnsServer.get_edge_center(LEFT))
+        self.play(GrowArrow(browserToDnsArrow))
+        self.wait(1)
+        
+        browserAndDns = VGroup(dns, browserurl, browserToDnsArrow)
+        newDnsText = dnsText.next_to(dnsServer, DOWN)
+        self.play(browserAndDns.animate.shift(UP*2.5))
+        self.play(Transform(dnsText, newDnsText))
+        self.play(FadeOut(browserToDnsArrow))
+
+        webServer = Utils.svgToWhite("assets/server.svg")
+        webText = Utils.textbox("Web Server", buff=MED_SMALL_BUFF).scale(0.3).next_to(webServer, UP)
+        web = VGroup(webServer, webText)
+        self.play(Create(web))
+        self.play(web.animate.shift(RIGHT*3.5, DOWN*2.5))
+        DnsToWebArrow = Arrow(newDnsText.get_edge_center(DOWN), webText.get_edge_center(UP))
+        self.play(GrowArrow(DnsToWebArrow))
+        self.wait(2)
+        self.play(FadeOut(DnsToWebArrow))
+
+        databaseSvg = Utils.svgToWhite("assets/database.svg")
+        databaseText = Utils.textbox("Database", buff=MED_SMALL_BUFF).scale(0.3).next_to(databaseSvg, UP)
+        database = VGroup(databaseSvg, databaseText)
+        self.play(Create(database))
+        self.play(database.animate.shift(LEFT*3.5, DOWN*2.5))
+
+        WebToDBArrow = Arrow(webServer.get_edge_center(LEFT), databaseSvg.get_edge_center(RIGHT))
+        self.play(GrowArrow(WebToDBArrow))
+        self.wait(2)
+        self.play(FadeOut(WebToDBArrow))
+
+        DBToWebArrow = Arrow(databaseSvg.get_edge_center(RIGHT), webServer.get_edge_center(LEFT))
+        self.play(GrowArrow(DBToWebArrow))
+        self.wait(2)
+        self.play(FadeOut(DBToWebArrow))
+
+        WebToBrowserArrow = Arrow(webServer.get_edge_center(LEFT), browserurl.get_edge_center(RIGHT))
+        self.play(GrowArrow(WebToBrowserArrow))
+        self.wait(2)
+        self.play(FadeOut(WebToBrowserArrow))
+
+        # TODO transform the previous empty browser to with content
+
+        self.wait(3)
+
+        
 
 class SpecificClientServer(Scene):
     pass
@@ -123,7 +186,7 @@ class ClientTest(Scene):
 
 class Main(Scene):
     def construct(self):
-        self.add_sound("assets/ref35.wav")
+        self.add_sound("assets/refl1min.wav")
         Introduction.construct(self)
         PhonePCTablet.construct(self)
         ClientServer.construct(self)
